@@ -1,0 +1,4 @@
+kerjakan di proses cek status. 
+
+jika pembayaran qris maka ambil total tagihan dan status pembayarannya.
+jika status cash lihat total di table pesanan dan status pembayarannya.
