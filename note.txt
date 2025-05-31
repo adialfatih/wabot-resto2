@@ -2,3 +2,62 @@ kerjakan di proses cek status.
 
 jika pembayaran qris maka ambil total tagihan dan status pembayarannya.
 jika status cash lihat total di table pesanan dan status pembayarannya.
+
+
+api kirim pesan 
+
+http://localhost:3001/api/kirim-pesan, //ini buatan sendiri bebas buat kirim apa aja
+http://localhost:3001/api/kirim-pesan  //ini khusus buat kirim bot
+
+{
+  "nomor_wa": "6289651253545@c.us",
+  "isi_pesanan": "tes isi pesan bebas ow",
+  "urlmedia":
+}
+
+
+{
+  "nomor_wa": "628123456789@c.us",
+  "kode_pesanan": "PZ123",
+  "status_baru": "selesai",
+  "url_gambar"
+}
+
+
+panggil pake javascript//
+
+fetch('/api/kirim-notifikasi', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    nomor_wa: '628123456789@c.us',
+    kode_pesanan: 'PZ123',
+    status_baru: 'selesai'
+  })
+})
+.then(res => res.json())
+.then(data => {
+  if (data.success) alert('Notifikasi dikirim ke WhatsApp user!');
+  else alert('Gagal: ' + data.error);
+});
+
+//panggil dari ci3
+
+public function kirim_notif_ke_wa() {
+  $data = [
+    'nomor_wa' => '628123456789@c.us',
+    'kode_pesanan' => 'PZ123',
+    'status_baru' => 'selesai'
+  ];
+
+  $ch = curl_init('http://localhost:3000/api/kirim-notifikasi'); // sesuaikan
+  curl_setopt($ch, CURLOPT_POST, 1);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+
+  $response = curl_exec($ch);
+  curl_close($ch);
+
+  echo $response;
+}

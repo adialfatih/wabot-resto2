@@ -91,7 +91,7 @@ module.exports = async function(client, message) {
 
     // Pesan
     if (isi.toLowerCase() === "pesan") {
-      db.query(`SELECT kode_pesanan,nomor_wa,status FROM pesanan WHERE nomor_wa = ? AND status IN ('Menunggu Pembayaran',' Dibayar','Sedang dibuat')`, [nomor],async (err, rows) => {
+      db.query(`SELECT kode_pesanan,nomor_wa,status FROM pesanan WHERE nomor_wa = ? AND status IN ('Menunggu Pembayaran','Dibayar','Sedang dibuat')`, [nomor],async (err, rows) => {
         if (err) {
           console.error("Error saat cek pesanan aktif:", err);
           // Jika terjadi kesalahan DB, kita bisa minta user coba lagi
@@ -102,16 +102,19 @@ module.exports = async function(client, message) {
           const pesanExisting = `⚠️ Anda memiliki pesanan yang belum selesai.\n\n` +
             `Ketik *Status* untuk melihat status pesanan terakhir.\n` +
             `Ketik *Batal* untuk membatalkan pesanan terakhir.\n`;
-          return client.sendMessage(nomor, pesanExisting);
+            await client.sendMessage(nomor, pesanExisting);
+        } else {
+            clearSession(nomor);
+            setSession(nomor, {
+              step: "input_pesanan",
+              pesanan: [] // array kosong untuk tampung item satu per satu
+            });
+
+            await client.sendMessage(nomor,`📝 Silakan masukkan pesanan Anda satu per satu.\nGunakan format: *#kode x jumlah* atau *Nama Menu x jumlah*.\nKetik *Selesai* jika sudah selesai memesan.`);
+            
         }
       });
-      clearSession(nomor);
-      setSession(nomor, {
-        step: "input_pesanan",
-        pesanan: [] // array kosong untuk tampung item satu per satu
-      });
-
-      return client.sendMessage(nomor,`📝 Silakan masukkan pesanan Anda satu per satu.\nGunakan format: *#kode x jumlah* atau *Nama Menu x jumlah*.\nKetik *Selesai* jika sudah selesai memesan.`);
+      return;
     }
     //tangani pesanan
     if (session?.step === "input_pesanan") {
@@ -427,7 +430,8 @@ module.exports = async function(client, message) {
       ? "Apakah Anda ingin melihat *MENU*?" 
       : "Apakah Anda butuh *BANTUAN*?";
     
-    await client.sendMessage(nomor, `Pesan tidak dikenali. ${randomPrompt}\n\nKetik *YA* untuk melanjutkan atau ketik *MENU* / *HELP* langsung.`);
+    //await client.sendMessage(nomor, `Pesan tidak dikenali. ${randomPrompt}\n\nKetik *YA* untuk melanjutkan atau ketik *MENU* / *HELP* langsung.`);
+    await client.sendMessage(nomor, `Hai! Saya siap bantu pesan makanan kamu 🍽️\nSilakan ketik menu untuk melihat daftar makanan yang tersedia.`);
     
     // Set session untuk menangkap jawaban YA
     setSession(nomor, { 
