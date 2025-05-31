@@ -66,7 +66,8 @@ module.exports = async function(client, message) {
       await client.sendMessage(nomor, `📖 *Panduan:*
 - *DAFTAR* untuk mendaftar
 - *MENU* untuk melihat menu
-- *PESAN #1 #2* untuk memesan`);
+- *PESAN* untuk memesan
+- *STATUS* untuk melihat status pesanan`);
       return;
     }
 
@@ -89,8 +90,8 @@ module.exports = async function(client, message) {
     }
 
     // Pesan
-    if (isi.toLowerCase().startsWith("pesan") || isi.toLowerCase().startsWith("psn")) {
-        db.query(`SELECT kode_pesanan,nomor_wa,status FROM pesanan WHERE nomor_wa = ? AND status IN ('Menunggu Pembayaran',' Dibayar','Sedang dibuat')`, [nomor],async (err, rows) => {
+    if (isi.toLowerCase() === "pesan") {
+      db.query(`SELECT kode_pesanan,nomor_wa,status FROM pesanan WHERE nomor_wa = ? AND status IN ('Menunggu Pembayaran',' Dibayar','Sedang dibuat')`, [nomor],async (err, rows) => {
         if (err) {
           console.error("Error saat cek pesanan aktif:", err);
           // Jika terjadi kesalahan DB, kita bisa minta user coba lagi
@@ -103,58 +104,97 @@ module.exports = async function(client, message) {
             `Ketik *Batal* untuk membatalkan pesanan terakhir.\n`;
           return client.sendMessage(nomor, pesanExisting);
         }
-        const { kodeQtyMap, orderedKode } = await parsePesananDariTeks(isi);
-        const semuaKode = orderedKode; // pakai orderedKode agar urutan sesuai input
-        
-        console.log('semuaKode', semuaKode);
-        if (semuaKode.length === 0) {
-            return client.sendMessage(nomor, "⚠️ Tidak ada menu yang cocok ditemukan.");
+      });
+      clearSession(nomor);
+      setSession(nomor, {
+        step: "input_pesanan",
+        pesanan: [] // array kosong untuk tampung item satu per satu
+      });
+
+      return client.sendMessage(nomor,`📝 Silakan masukkan pesanan Anda satu per satu.\nGunakan format: *#kode x jumlah* atau *Nama Menu x jumlah*.\nKetik *Selesai* jika sudah selesai memesan.`);
+    }
+    //tangani pesanan
+    if (session?.step === "input_pesanan") {
+      if (isi.toLowerCase() === "selesai") {
+        if (session.pesanan.length === 0) {
+          return client.sendMessage(nomor, "⚠️ Anda belum memasukkan pesanan.");
         }
 
-        db.query(
-            `SELECT kode_menu, nama_menu, alias, harga, kategori 
-            FROM table_menu 
-            WHERE kode_menu IN (${semuaKode.map(() => '?').join(',')})`,
-            semuaKode,
-            async (err, menuRows) => {
-            if (err || menuRows.length === 0) {
-                return client.sendMessage(nomor, "❌ Gagal mengambil data menu.");
-            }
+        // Buat ringkasan & total
+        let total = 0;
+        const list = session.pesanan.map((item, i) => {
+          const subtotal = item.qty * item.harga;
+          total += subtotal;
+          return `${i + 1}. ${item.nama_menu} x${item.qty} Rp. ${subtotal.toLocaleString('id-ID')}`;
+        }).join('\n');
 
-            //const kategoriUrutan = { food: 1, drink: 2, snack: 3 };
-            //const menuTersusun = menuRows.sort((a, b) => (kategoriUrutan[a.kategori] || 99) - (kategoriUrutan[b.kategori] || 99));
-            const menuTersusun = Object.keys(kodeQtyMap).map(kode => {
-                return menuRows.find(row => row.kode_menu == kode);
-            }).filter(Boolean);
+        await client.sendMessage(nomor,
+          `🛒 *Anda akan memesan:*\n${list}\n\n*Total Pesanan:* Rp. ${total.toLocaleString('id-ID')}\n\nApakah pesanan sudah sesuai?`);
+        
+        // Simpan ke sesi baru
+        setSession(nomor, {
+          step: "konfirmasi_pesanan",
+          pesanan: session.pesanan
+        });
 
-            let totalHarga = 0;
-            let listMenu = menuTersusun.map((item, i) => {
-                const qty = kodeQtyMap[item.kode_menu] || 1;
-                const subtotal = qty * item.harga;
-                totalHarga += subtotal;
-                return `${i + 1}. ${item.nama_menu} x${qty} Rp. ${subtotal.toLocaleString('id-ID')}`;
-            }).join('\n');
+        return;
+      }
 
-            const pesanRingkasan = `🛒 *Anda akan memesan :*\n${listMenu}\n\n*Total Pesanan:* Rp. ${totalHarga.toLocaleString('id-ID')}\n\nApakah pesanan sudah sesuai?`;
+      // Deteksi input: #kode x qty atau nama x qty
+      //const regexKode = /#(\d+)\s*x\s*(\d+)/i;
+      //const matchKode = isi.match(regexKode);
+      let matchKode = isi.match(/^#(\d+)(?:\s*x\s*(\d+))?$/i);
+      if (matchKode) {
+        const kode = matchKode[1];
+        const qty = parseInt(matchKode[2]) || 1; // default qty = 1 jika tidak ditulis
 
-            // Simpan ke session
-            const pesananDetail = menuRows.map(menu => ({
-                kode_menu: menu.kode_menu,
-                qty: kodeQtyMap[menu.kode_menu] || 1
-            }));
+        db.query(`SELECT * FROM table_menu WHERE kode_menu = ?`, [kode], async (err, rows) => {
+          if (err || rows.length === 0) {
+            return client.sendMessage(nomor, `❌ Menu dengan kode #${kode} tidak ditemukan.`);
+          }
 
-            setSession(nomor, { step: "konfirmasi_pesanan", pesanan: pesananDetail });
-            await client.sendMessage(nomor, pesanRingkasan);
-            }
-        );
+          const item = rows[0];
+          session.pesanan.push({
+            kode_menu: item.kode_menu,
+            nama_menu: item.nama_menu,
+            harga: item.harga,
+            qty
+          });
+          setSession(nomor, session);
+          await client.sendMessage(nomor, `✅ *${item.nama_menu} x${qty}* telah ditambahkan.`);
         });
         return;
-    } //end pesan
+      }
 
+      // Deteksi nama menu + qty (fuzzy)
+      const matchNamaQty = isi.match(/^(.+?)\s*x\s*(\d+)$/i);
+      const nama = matchNamaQty ? matchNamaQty[1].trim() : isi.trim();
+      const qty = matchNamaQty ? parseInt(matchNamaQty[2]) : 1;
+
+      const { cariMenuDenganNamaBebas } = require('../utils/fuzzyMatcher');
+      const hasil = await cariMenuDenganNamaBebas(nama);
+
+      if (hasil.length === 0) {
+        return client.sendMessage(nomor, `❌ Menu *${nama}* tidak ditemukan.`);
+      }
+
+      const item = hasil[0];
+      session.pesanan.push({
+        kode_menu: item.kode_menu,
+        nama_menu: item.nama_menu,
+        harga: item.harga,
+        qty
+      });
+      setSession(nomor, session);
+      await client.sendMessage(nomor, `✅ *${item.nama_menu} x${qty}* telah ditambahkan.`);
+      return;
+      //return client.sendMessage(nomor, "❌ Format tidak dikenali. Gunakan *#kode x jumlah* atau *nama menu x jumlah*. Ketik *selesai* jika sudah selesai.");
+    }
+    //block kode menangani pesanan
 
     // Konfirmasi pesanan
     if (session?.step === "konfirmasi_pesanan") {
-      if (isi.toLowerCase() === "ya" || isi.toLowerCase() === "y" || isi.toLowerCase() === "iya" || isi.toLowerCase() === "yes") {
+      if (isi.toLowerCase() === "ya" || isi.toLowerCase() === "y" || isi.toLowerCase() === "iya" || isi.toLowerCase() === "yes" || isi.toLowerCase() === "yoi") {
         setSession(nomor, { step: "pilih_pengambilan" });
         client.sendMessage(nomor, "Silakan pilih: *Dine In* / *Take Away* / *Delivery*");
       } else {
@@ -236,7 +276,7 @@ module.exports = async function(client, message) {
                 VALUES (?, ?, ?, ?, 'Menunggu Pembayaran')`, 
                 [kodePesanan, totalHarga, kodeUnik, totalBayar]);
 
-                client.sendMessage(nomor, `✅ Pesanan berhasil dibuat :\nKode pesanan : *${kodePesanan}*\nStatus : *Menunggu Pembayaran*\nTagihan : Rp ${totalHarga.toLocaleString()}\nKode unik : *${kodeUnik}*\n\nSilahkan *SCAN* dan Bayar sesuai dengan total tagihan : *Rp ${totalBayar.toLocaleString()}* (Jangan lupa kode uniknya ya kak *${kodeUnik}*).`);
+                client.sendMessage(nomor, `✅ Pesanan berhasil dibuat :\nKode pesanan : *${kodePesanan}*\nStatus : *Menunggu Pembayaran*\nTagihan : Rp ${totalHarga.toLocaleString()}\nKode unik : *${kodeUnik}*\n\nSilahkan *SCAN* dan Bayar sesuai dengan total tagihan : *Rp ${totalBayar.toLocaleString()}*\n(Jangan lupa kode uniknya ya kak *${kodeUnik}*).`);
 
                 db.query(`SELECT url_gambar FROM gambar_qris LIMIT 1`, async (err, rows) => {
                 if (rows.length > 0) {

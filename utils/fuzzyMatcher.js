@@ -3,7 +3,7 @@ const db = require('../db');
 
 async function cariMenuDenganNamaBebas(teksUser) {
   return new Promise((resolve, reject) => {
-    db.query(`SELECT kode_menu, nama_menu, alias FROM table_menu`, (err, rows) => {
+    db.query(`SELECT kode_menu, nama_menu, alias, harga FROM table_menu`, (err, rows) => {
       if (err) return reject(err);
 
       const fuse = new Fuse(rows, {
@@ -24,6 +24,7 @@ async function cariMenuDenganNamaBebas(teksUser) {
           hasil.push({
             kode_menu: cocok[0].item.kode_menu,
             nama_menu: cocok[0].item.nama_menu,
+            harga: cocok[0].item.harga,
             input: item,
           });
         }
