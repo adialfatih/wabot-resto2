@@ -72,7 +72,10 @@ module.exports = async function(client, message) {
     }
 
     // Menu
-    if (isi.toLowerCase() === "menu") {
+    const modelMenu = ["menu", "meu", "men", "menuw", "menui", "meniu","meni"];
+    if (modelMenu.includes(isi.toLowerCase())) {
+    //if (isi.toLowerCase() === "menu") {
+        await client.sendMessage(nomor, "Sebentar ya kak, 😊\nDaftar menu akan saya kirim sebentar lagi.");
         db.query(`SELECT url_gambar FROM daftar_menu`, async (err, result) => {
             if (err || result.length === 0) return client.sendMessage(nomor, "Menu belum tersedia.");
 
@@ -279,7 +282,7 @@ module.exports = async function(client, message) {
                 VALUES (?, ?, ?, ?, 'Menunggu Pembayaran')`, 
                 [kodePesanan, totalHarga, kodeUnik, totalBayar]);
 
-                client.sendMessage(nomor, `✅ Pesanan berhasil dibuat :\nKode pesanan : *${kodePesanan}*\nStatus : *Menunggu Pembayaran*\nTagihan : Rp ${totalHarga.toLocaleString()}\nKode unik : *${kodeUnik}*\n\nSilahkan *SCAN* dan Bayar sesuai dengan total tagihan : *Rp ${totalBayar.toLocaleString()}*\n(Jangan lupa kode uniknya ya kak *${kodeUnik}*).`);
+                client.sendMessage(nomor, `✅ Pesanan berhasil dibuat :\nKode pesanan : *${kodePesanan}*\nStatus : *Menunggu Pembayaran*\nTagihan : Rp ${totalHarga.toLocaleString()}\nKode unik : *${kodeUnik}*\n\nSilahkan *SCAN* QRIS dibawah ini dan Bayar sesuai dengan total tagihan : *Rp ${totalBayar.toLocaleString()}*\n(Jangan lupa kode uniknya ya kak *${kodeUnik}*).`);
 
                 db.query(`SELECT url_gambar FROM gambar_qris LIMIT 1`, async (err, rows) => {
                 if (rows.length > 0) {
