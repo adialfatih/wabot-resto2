@@ -70,6 +70,29 @@ module.exports = async function(client, message) {
 - *STATUS* untuk melihat status pesanan`);
       return;
     }
+    const modelPanduanPesan = [
+      "cara pesan", "bagaimana cara memesan", "gimana cara pesan",
+      "mau pesan gimana", "pesan gimana", "pesan bagaimana"
+    ];
+    if (modelPanduanPesan.includes(isi.toLowerCase())) {
+      await client.sendMessage(nomor, `📖 *Cara Memesan di Wabot-Resto:*
+
+  1. Ketik *MENU* untuk melihat daftar makanan.
+  2. Ketik *PESAN* untuk mulai memesan.
+  3. Masukkan pesanan satu per satu, contoh:
+    - *#1 x 2* (Kode menu #1 sebanyak 2 porsi)
+    - *nasgor babat x 1* (Nama menu + jumlah)
+  4. Ketik *List* untuk melihat daftar pesanan.
+  5. Ketik *SELESAI* jika sudah selesai memilih menu.
+  6. Konfirmasi pesanan.
+  7. Pilih metode ambil: *Dine In*, *Take Away*, atau *Delivery*.
+  8. Masukkan alamat (jika Delivery) atau nomor meja (jika Dine In).
+  9. Pilih pembayaran: *Cash* atau *QRIS*.
+  10. Selesai! 🎉
+
+Jika masih bingung, ketik *HELP* ya kak 😊`);
+      return;
+    }
 
     // Menu
     const modelMenu = ["menu", "meu", "men", "menuw", "menui", "meniu","meni"];
@@ -123,6 +146,22 @@ module.exports = async function(client, message) {
     }
     //tangani pesanan
     if (session?.step === "input_pesanan") {
+      const modelList = ["list", "daftar", "lihat", "cek pesanan"];
+      if (modelList.includes(isi.toLowerCase())) {
+        if (session.pesanan.length === 0) {
+          return client.sendMessage(nomor, "📝 Kamu belum menambahkan pesanan apapun.");
+        }
+
+        let total = 0;
+        const list = session.pesanan.map((item, i) => {
+          const subtotal = item.qty * item.harga;
+          total += subtotal;
+          return `${i + 1}. ${item.nama_menu} x${item.qty} = Rp. ${subtotal.toLocaleString('id-ID')}`;
+        }).join('\n');
+
+        return client.sendMessage(nomor, 
+          `🧾 *Pesanan Sementara Kamu:*\n${list}\n\n*Total Saat Ini:* Rp. ${total.toLocaleString('id-ID')}\n\nKetik *SELESAI* jika kamu sudah selesai.`);
+      }
       const modelSelesai = ["selesai", "selsai", "sudah", "udah", "dah", "itu aja","sudah itu aja"];
       if (modelSelesai.includes(isi.toLowerCase())) {
       //if (isi.toLowerCase() === "selesai") {
@@ -469,7 +508,7 @@ module.exports = async function(client, message) {
       : "Apakah Anda butuh *BANTUAN*?";
     
     //await client.sendMessage(nomor, `Pesan tidak dikenali. ${randomPrompt}\n\nKetik *YA* untuk melanjutkan atau ketik *MENU* / *HELP* langsung.`);
-    await client.sendMessage(nomor, `Hai! Saya siap bantu pesan makanan kamu 🍽️\nSilakan ketik menu untuk melihat daftar makanan yang tersedia.`);
+    await client.sendMessage(nomor, `Hai! Saya siap bantu pesan makanan kamu 🍽️\nSilakan ketik *MENU* untuk melihat daftar makanan yang tersedia.\nKetik *PESAN* untuk memesan makanan.`);
     
     // Set session untuk menangkap jawaban YA
     setSession(nomor, { 
