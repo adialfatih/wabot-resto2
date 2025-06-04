@@ -1,7 +1,7 @@
 const db = require('../db');
 const { MessageMedia  } = require('whatsapp-web.js');
 const { getSession, setSession, clearSession } = require('./sessionManager');
-const { parsePesananDariTeks } = require('../utils/parsePesanan');
+//const { parsePesananDariTeks } = require('../utils/parsePesanan');
 
 module.exports = async function(client, message) {
   const isi = message.body.trim();
@@ -93,14 +93,16 @@ module.exports = async function(client, message) {
     }
 
     // Pesan
-    if (isi.toLowerCase() === "pesan") {
+    const modelPesan = ["pesan", "psn", "pesen", "psan", "peszn", "saya ingin pesan","saya pesan","saya mau pesan"];
+    if (modelPesan.includes(isi.toLowerCase())) {
+    //if (isi.toLowerCase() === "pesan") {
       db.query(`SELECT kode_pesanan,nomor_wa,status FROM pesanan WHERE nomor_wa = ? AND status IN ('Menunggu Pembayaran','Dibayar','Sedang dibuat')`, [nomor],async (err, rows) => {
         if (err) {
           console.error("Error saat cek pesanan aktif:", err);
           // Jika terjadi kesalahan DB, kita bisa minta user coba lagi
           return client.sendMessage(nomor, "❌ Terjadi kesalahan pada server. Silakan coba lagi nanti.");
         }
-        console.error("Jumlah  :"+ rows.length);
+        //console.error("Jumlah  : "+ rows.length);
         if (rows.length > 0) {
           const pesanExisting = `⚠️ Anda memiliki pesanan yang belum selesai.\n\n` +
             `Ketik *Status* untuk melihat status pesanan terakhir.\n` +
@@ -113,7 +115,7 @@ module.exports = async function(client, message) {
               pesanan: [] // array kosong untuk tampung item satu per satu
             });
 
-            await client.sendMessage(nomor,`📝 Silakan masukkan pesanan Anda satu per satu.\nGunakan format: *#kode x jumlah* atau *Nama Menu x jumlah*.\nKetik *Selesai* jika sudah selesai memesan.`);
+            await client.sendMessage(nomor,`📝 Silahkan masukan pesanan Anda satu per satu.\n\nGunakan format :\n*#kode x jumlah* atau \n*Nama Menu x jumlah*.\n\nKetik *Selesai* jika sudah selesai memesan.`);
             
         }
       });
@@ -121,7 +123,9 @@ module.exports = async function(client, message) {
     }
     //tangani pesanan
     if (session?.step === "input_pesanan") {
-      if (isi.toLowerCase() === "selesai") {
+      const modelSelesai = ["selesai", "selsai", "sudah", "udah", "dah", "itu aja","sudah itu aja"];
+      if (modelSelesai.includes(isi.toLowerCase())) {
+      //if (isi.toLowerCase() === "selesai") {
         if (session.pesanan.length === 0) {
           return client.sendMessage(nomor, "⚠️ Anda belum memasukkan pesanan.");
         }
@@ -145,7 +149,18 @@ module.exports = async function(client, message) {
 
         return;
       }
+      if (isi.toLowerCase().startsWith("coret ") || isi.toLowerCase().startsWith("hapus ")) {
+        const namaDicoret = isi.slice(6).trim().toLowerCase();
+        const index = session.pesanan.findIndex(item => item.nama_menu.toLowerCase().includes(namaDicoret));
 
+        if (index !== -1) {
+          const itemTerhapus = session.pesanan.splice(index, 1)[0];
+          setSession(nomor, session);
+          return client.sendMessage(nomor, `❌ *${itemTerhapus.nama_menu}* telah dibatalkan dari pesanan.`);
+        } else {
+          return client.sendMessage(nomor, `⚠️ Tidak ditemukan menu *${namaDicoret}* dalam daftar pesanan.`);
+        }
+      }
       // Deteksi input: #kode x qty atau nama x qty
       //const regexKode = /#(\d+)\s*x\s*(\d+)/i;
       //const matchKode = isi.match(regexKode);
@@ -200,7 +215,8 @@ module.exports = async function(client, message) {
 
     // Konfirmasi pesanan
     if (session?.step === "konfirmasi_pesanan") {
-      if (isi.toLowerCase() === "ya" || isi.toLowerCase() === "y" || isi.toLowerCase() === "iya" || isi.toLowerCase() === "yes" || isi.toLowerCase() === "yoi") {
+      const modelKonfirmasi = ["sudah", "sesuai", "sudah sesuai", "y", "dah", "ya","iya","yes","yoi"];
+      if (modelKonfirmasi.includes(isi.toLowerCase())) {
         setSession(nomor, { step: "pilih_pengambilan" });
         client.sendMessage(nomor, "Silakan pilih: *Dine In* / *Take Away* / *Delivery*");
       } else {
@@ -260,19 +276,38 @@ module.exports = async function(client, message) {
       db.query(`SELECT COUNT(*) AS total FROM pesanan`, (err, result) => {
         const noUrut = result[0].total + 1;
         const kodePesanan = 'OR' + noUrut.toString().padStart(3, '0');
+
         const kodeList = session.pesanan.map(p => p.kode_menu);
-        // Hitung total harga
-        //const kodeList = session.kode;
-        db.query(`SELECT kode_menu, harga FROM table_menu WHERE kode_menu IN (${kodeList.map(() => '?').join(',')})`, kodeList, (err, hargaRows) => {
-          const totalHarga = hargaRows.reduce((acc, row) => acc + row.harga, 0);
+        //const daftarMenuQty = session.pesanan.map(p => `${p.kode_menu}x${p.qty}`).join(',');
+        //const totalHarga2 = session.pesanan.reduce((acc, p) => acc + (p.qty * p.harga), 0);
+        
+        db.query(`SELECT kode_menu, harga FROM table_menu WHERE kode_menu IN (${kodeList.map(() => '?').join(',')})`, kodeList, (err2, hargaRows) => {
+          if (err2 || hargaRows.length === 0) {
+            return client.sendMessage(nomor, "⚠️ Terjadi kesalahan saat memverifikasi pesanan. Silakan coba lagi.");
+          }
+          const hargaMap = {};
+          for (const row of hargaRows) {
+            hargaMap[row.kode_menu] = row.harga;
+          }
+
+          let daftarMenuQty = [];
+          let totalHarga = 0;
+
+          for (const item of session.pesanan) {
+            const hargaValid = hargaMap[item.kode_menu];
+            if (!hargaValid) continue; // abaikan item tidak valid
+
+            daftarMenuQty.push(`${item.kode_menu}x${item.qty}`);
+            totalHarga += hargaValid * item.qty;
+          }
 
           // Simpan ke DB
           db.query(`INSERT INTO pesanan 
             (kode_pesanan, nomor_wa, daftar_kode_menu, total_harga, metode_pengambilan, alamat, no_meja, metode_pembayaran, status) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu Pembayaran')`, [
-            kodePesanan, nomor, kodeList.join(','), totalHarga, session.metode, session.alamat || null, session.no_meja || null, metode
+            kodePesanan, nomor, daftarMenuQty.join(','), totalHarga, session.metode, session.alamat || null, session.no_meja || null, metode
           ]);
-          if (metode === "qris" || metode === "QRIS") {
+          if (metode === "qris") {
                 const kodeUnik = Math.floor(100 + Math.random() * 900);
                 const totalBayar = totalHarga + kodeUnik;
 
@@ -291,7 +326,7 @@ module.exports = async function(client, message) {
                 }
                 });
             }
-          if (metode === "cash" || metode === "Cash" || metode === "CASH") {
+          if (metode === "cash") {
                 //client.sendMessage(nomor, media);
                 client.sendMessage(nomor, `✅ Pesanan berhasil dibuat :\nKode pesanan : *${kodePesanan}*\nStatus : *Menunggu Pembayaran*\nTotal: Rp ${totalHarga.toLocaleString()}\n\nSilahkan membayar ke kasir sesuai total tagihan ya kak 😊.`);
           }
