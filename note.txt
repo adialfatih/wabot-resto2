@@ -61,3 +61,78 @@ public function kirim_notif_ke_wa() {
 
   echo $response;
 }
+
+
+CREATE TABLE jam_buka_resto (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  hari VARCHAR(10) NOT NULL,  -- Nama hari (Minggu sampai Sabtu)
+  jam_buka VARCHAR(5) NOT NULL, -- Format 'HH:MM'
+  jam_tutup VARCHAR(5) NOT NULL -- Format 'HH:MM'
+);
+
+INSERT INTO jam_buka_resto (hari, jam_buka, jam_tutup) VALUES
+('Minggu', '10:00', '22:00'),
+('Senin', '08:00', '20:00'), -- Tutup jam 8 malam hari Senin
+('Selasa', '08:00', '22:00'),
+('Rabu', '08:00', '22:00'),
+('Kamis', '08:00', '22:00'),
+('Jumat', '08:00', '23:00'), -- Buka sampai jam 11 malam hari Jumat
+('Sabtu', '09:00', '23:00'); -- Buka lebih siang di Sabtu
+
+
+
+
+client.on('message', async msg => {
+  logToFile(`Received message: ${msg.body}`);
+  
+  try {
+    // 1. Dapatkan waktu sekarang
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentDay = now.getDay(); // 0 (Minggu) sampai 6 (Sabtu)
+    
+    // 2. Query ke database untuk mendapatkan jam buka resto hari ini
+    const db = require('./config/database'); // Sesuaikan dengan path database Anda
+    const query = `
+      SELECT jam_buka, jam_tutup 
+      FROM jam_buka_resto 
+      WHERE hari = ?
+    `;
+    
+    // Konversi currentDay ke format yang sesuai dengan database (misal: 0=Minggu, dst)
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const currentDayName = days[currentDay];
+    
+    const [hours] = await db.query(query, [currentDayName]);
+    
+    if (hours.length === 0) {
+      // Jika tidak ada data untuk hari ini, anggap resto tutup
+      return require('./controllers/closeOrderController')(client, msg);
+    }
+    
+    const { jam_buka, jam_tutup } = hours[0];
+    
+    // 3. Parse jam buka dan tutup
+    const [openHour, openMinute] = jam_buka.split(':').map(Number);
+    const [closeHour, closeMinute] = jam_tutup.split(':').map(Number);
+    
+    // 4. Cek apakah sekarang dalam jam buka
+    const isOpen = (
+      (currentHour > openHour || (currentHour === openHour && currentMinute >= openMinute)) &&
+      (currentHour < closeHour || (currentHour === closeHour && currentMinute < closeMinute))
+    );
+    
+    // 5. Arahkan ke controller yang sesuai
+    if (isOpen) {
+      require('./controllers/botController')(client, msg);
+    } else {
+      require('./controllers/closeOrderController')(client, msg);
+    }
+    
+  } catch (error) {
+    console.error('Error checking restaurant hours:', error);
+    // Jika ada error, default ke botController atau bisa juga ke closeOrderController
+    require('./controllers/botController')(client, msg);
+  }
+});

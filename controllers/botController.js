@@ -77,18 +77,18 @@ module.exports = async function(client, message) {
     if (modelPanduanPesan.includes(isi.toLowerCase())) {
       await client.sendMessage(nomor, `📖 *Cara Memesan di Wabot-Resto:*
 
-  1. Ketik *MENU* untuk melihat daftar makanan.
-  2. Ketik *PESAN* untuk mulai memesan.
-  3. Masukkan pesanan satu per satu, contoh:
-    - *#1 x 2* (Kode menu #1 sebanyak 2 porsi)
-    - *nasgor babat x 1* (Nama menu + jumlah)
-  4. Ketik *List* untuk melihat daftar pesanan.
-  5. Ketik *SELESAI* jika sudah selesai memilih menu.
-  6. Konfirmasi pesanan.
-  7. Pilih metode ambil: *Dine In*, *Take Away*, atau *Delivery*.
-  8. Masukkan alamat (jika Delivery) atau nomor meja (jika Dine In).
-  9. Pilih pembayaran: *Cash* atau *QRIS*.
-  10. Selesai! 🎉
+1. Ketik *MENU* untuk melihat daftar makanan.
+2. Ketik *PESAN* untuk mulai memesan.
+3. Masukkan pesanan satu per satu, contoh:
+  - *#1 x 2* (Kode menu #1 sebanyak 2 porsi)
+  - *nasgor babat x 1* (Nama menu + jumlah)
+4. Ketik *List* untuk melihat daftar pesanan.
+5. Ketik *SELESAI* jika sudah selesai memilih menu.
+6. Konfirmasi pesanan.
+7. Pilih metode ambil: *Dine In*, *Take Away*, atau *Delivery*.
+8. Masukkan alamat (jika Delivery) atau nomor meja (jika Dine In).
+9. Pilih pembayaran: *Cash* atau *QRIS*.
+10. Selesai! 🎉
 
 Jika masih bingung, ketik *HELP* ya kak 😊`);
       return;
@@ -146,7 +146,11 @@ Jika masih bingung, ketik *HELP* ya kak 😊`);
     }
     //tangani pesanan
     if (session?.step === "input_pesanan") {
-      const modelList = ["list", "daftar", "lihat", "cek pesanan"];
+      const modelBatal = ["batal", "gak jadi", "rak sido", "btl", "btal", "batal pesan", "batal pesanan"];
+      if (modelBatal.includes(isi.toLowerCase())) {
+        clearSession(nomor);
+      }
+      const modelList = ["list", "lihat", "cek pesanan", "total", "totalnya", "lihat pesanan"];
       if (modelList.includes(isi.toLowerCase())) {
         if (session.pesanan.length === 0) {
           return client.sendMessage(nomor, "📝 Kamu belum menambahkan pesanan apapun.");
@@ -508,7 +512,7 @@ Jika masih bingung, ketik *HELP* ya kak 😊`);
       : "Apakah Anda butuh *BANTUAN*?";
     
     //await client.sendMessage(nomor, `Pesan tidak dikenali. ${randomPrompt}\n\nKetik *YA* untuk melanjutkan atau ketik *MENU* / *HELP* langsung.`);
-    await client.sendMessage(nomor, `Hai! Saya siap bantu pesan makanan kamu 🍽️\nSilakan ketik *MENU* untuk melihat daftar makanan yang tersedia.\nKetik *PESAN* untuk memesan makanan.`);
+    await client.sendMessage(nomor, `Hai! Saya siap bantu pesan makanan kamu 🍽️\n\nSilakan ketik *MENU* untuk melihat daftar makanan yang tersedia.\n\nKetik *PESAN* untuk memesan makanan.\n\nTanyakan *cara pesan* untuk detail.`);
     
     // Set session untuk menangkap jawaban YA
     setSession(nomor, { 

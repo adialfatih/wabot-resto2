@@ -6,15 +6,31 @@ const { Client, LocalAuth, MessageMedia  } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
 const path = require('path');
 const db = require('./db');
+const cors = require('cors');
 require('dotenv').config();
 const puppeteer = require('puppeteer');
 //const getRandomMotivation = require('./utils/getDailyMotivation');
 
 const app = express();
 const port = process.env.PORT || 3001;
-
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://dashboard.wabotresto.com',
+  'https://admin.partner-resto.id'
+];
 // Express Setup
 app.set('view engine', 'ejs');
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('CORS Not Allowed'), false);
+    }
+  }
+}));
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
