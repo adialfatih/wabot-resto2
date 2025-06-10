@@ -136,3 +136,7 @@ client.on('message', async msg => {
     require('./controllers/botController')(client, msg);
   }
 });
+
+
+
+ALTER TABLE `pembayaran_kodeunik` ADD `tanggal_code` DATE NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `status`;

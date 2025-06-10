@@ -5,7 +5,7 @@ const { Client, LocalAuth, MessageMedia  } = require('whatsapp-web.js');
 //const ChartDataLabels = require('chartjs-plugin-datalabels');
 const qrcode = require('qrcode');
 const path = require('path');
-const db = require('./db');
+
 const cors = require('cors');
 require('dotenv').config();
 const puppeteer = require('puppeteer');
