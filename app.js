@@ -9,6 +9,7 @@ const path = require('path');
 const cors = require('cors');
 require('dotenv').config();
 const puppeteer = require('puppeteer');
+const pool = require('./db');
 //const getRandomMotivation = require('./utils/getDailyMotivation');
 
 const app = express();
@@ -18,6 +19,8 @@ const allowedOrigins = [
   'https://dashboard.wabotresto.com',
   'https://admin.partner-resto.id'
 ];
+const botController = require('./controllers/botController');
+const closeOrderController = require('./controllers/closeOrderController');
 // Express Setup
 app.set('view engine', 'ejs');
 app.use(cors({
@@ -75,13 +78,79 @@ client.on('authenticated', () => {
 });
 
 const userSession = {};
-client.on('message', async msg => {
-  //console.log('📩 Message Received:', msg.body);
-  logToFile(`Received message: ${msg.body}`);
-  // ⬇️ Tambahan: Simpan ke database
-  require('./controllers/botController')(client, msg);
+// client.on('message', async msg => {
+//   //console.log('📩 Message Received:', msg.body);
+//   logToFile(`Received message: ${msg.body}`);
+//   // ⬇️ Tambahan: Simpan ke database
+//   require('./controllers/botController')(client, msg);
 
+// });
+client.on('message', async msg => {
+  console.log('📩 Message Received:', msg.body);
+  logToFile(`Received message: ${msg.body}`);
+
+  // Abaikan pesan dari status broadcast
+  if (msg.from === 'status@broadcast') {
+    return;
+  }
+
+  let connection;
+  try {
+    connection = await pool.getConnection(); // Dapatkan koneksi dari pool
+
+    // 1. Cek jam buka resto
+    const now = new Date();
+    const hariSekarang = now.toLocaleDateString('id-ID', { weekday: 'long' }); // Contoh: "Senin"
+    const jamSekarang = now.toTimeString().slice(0, 5); // Format HH:MM
+
+    // Ubah nama hari ke format yang sesuai dengan tabel Anda (contoh: "Senin" menjadi "Senin")
+    // Pastikan konsisten antara database dan format toLocaleDateString
+    const hariUntukQuery = hariSekarang.charAt(0).toUpperCase() + hariSekarang.slice(1);
+
+    const [jamBukaRows] = await connection.execute(
+      `SELECT jam_buka, jam_tutup FROM jam_buka_resto WHERE hari = ?`,
+      [hariUntukQuery]
+    );
+
+    let isRestoOpen = false;
+    if (jamBukaRows.length > 0) {
+      const { jam_buka, jam_tutup } = jamBukaRows[0];
+      // Bandingkan jam sekarang dengan jam buka dan jam tutup
+      if (jamSekarang >= jam_buka && jamSekarang <= jam_tutup) {
+        isRestoOpen = true;
+      }
+    } else {
+      // Jika data hari tidak ditemukan di DB, asumsikan tutup atau ada kesalahan konfigurasi
+      console.warn(`⚠️ Jam buka untuk hari ${hariUntukQuery} tidak ditemukan di database.`);
+    }
+
+    // 2. Arahkan pesan berdasarkan jam buka
+    if (isRestoOpen) {
+      // Jika resto buka, panggil botController
+      await botController(client, msg);
+      console.log('📩 Message forwarded to botController');
+    } else {
+      // Jika resto tutup, panggil closeOrderController
+      await closeOrderController(client, msg);
+      console.log('📩 Message forwarded to closeOrderController');
+    }
+
+  } catch (err) {
+    console.error('❌ Error handling message in app.js:', err);
+    // Jika ada error di sini (misal DB tidak bisa diakses), tetap berikan respons ke user
+    // atau arahkan ke botController sebagai fallback
+    try {
+        await msg.reply("Terjadi kesalahan pada sistem pengecekan jam buka. Mohon coba beberapa saat lagi.");
+    } catch (sendErr) {
+        console.error("Failed to send error message:", sendErr);
+    }
+  } finally {
+    if (connection) {
+      connection.release(); // Pastikan koneksi dikembalikan ke pool
+    }
+  }
 });
+//add on message
 
 client.initialize();
 
@@ -259,11 +328,26 @@ app.post('/api/kirim-pesan', async (req, res) => {
 });
 
 
-app.get('/users', (req, res) => {
-  db.query('SELECT * FROM users', (err, results) => {
-    if (err) return res.send('Error');
+// app.get('/users', (req, res) => {
+//   db.query('SELECT * FROM users', (err, results) => {
+//     if (err) return res.send('Error');
+//     res.json(results);
+//   });
+// });
+app.get('/users', async (req, res) => {
+  let connection;
+  try {
+    connection = await pool.getConnection(); // Dapatkan koneksi dari pool
+    const [results] = await connection.execute('SELECT * FROM user'); // Gunakan 'user' bukan 'users' jika nama tabel Anda memang 'user'
     res.json(results);
-  });
+  } catch (err) {
+    console.error('❌ Error fetching users:', err);
+    res.status(500).send('Error fetching users from database.');
+  } finally {
+    if (connection) {
+      connection.release(); // Pastikan koneksi dikembalikan ke pool
+    }
+  }
 });
 
 app.get('/logs', (req, res) => {

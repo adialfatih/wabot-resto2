@@ -65,19 +65,19 @@ public function kirim_notif_ke_wa() {
 
 CREATE TABLE jam_buka_resto (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  hari VARCHAR(10) NOT NULL,  -- Nama hari (Minggu sampai Sabtu)
-  jam_buka VARCHAR(5) NOT NULL, -- Format 'HH:MM'
-  jam_tutup VARCHAR(5) NOT NULL -- Format 'HH:MM'
+  hari VARCHAR(10) NOT NULL,  
+  jam_buka VARCHAR(5) NOT NULL, 
+  jam_tutup VARCHAR(5) NOT NULL
 );
 
 INSERT INTO jam_buka_resto (hari, jam_buka, jam_tutup) VALUES
 ('Minggu', '10:00', '22:00'),
-('Senin', '08:00', '20:00'), -- Tutup jam 8 malam hari Senin
+('Senin', '08:00', '20:00'), 
 ('Selasa', '08:00', '22:00'),
 ('Rabu', '08:00', '22:00'),
 ('Kamis', '08:00', '22:00'),
-('Jumat', '08:00', '23:00'), -- Buka sampai jam 11 malam hari Jumat
-('Sabtu', '09:00', '23:00'); -- Buka lebih siang di Sabtu
+('Jumat', '00:00', '00:00'), 
+('Sabtu', '09:00', '23:00'); 
 
 
 
@@ -140,3 +140,7 @@ client.on('message', async msg => {
 
 
 ALTER TABLE `pembayaran_kodeunik` ADD `tanggal_code` DATE NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `status`;
+
+
+sudo timedatectl set-timezone Asia/Jakarta
+//selaraskan zona waktu vps
