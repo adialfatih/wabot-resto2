@@ -76,6 +76,39 @@ module.exports = async function(client, message) { // Pastikan fungsi ini async
       await client.sendMessage(nomor, `📖 *Cara Memesan di Wabot-Resto:*\n\n1. Ketik *MENU* untuk melihat daftar makanan.\n2. Ketik *PESAN* untuk mulai memesan.\n3. Masukkan pesanan satu per satu, contoh:\n  - *#1 x 2* (Kode menu #1 sebanyak 2 porsi)\n  - *nasgor babat x 1* (Nama menu + jumlah)\n4. Ketik *List* untuk melihat daftar pesanan.\n5. Ketik *SELESAI* jika sudah selesai memilih menu.\n6. Konfirmasi pesanan.\n7. Pilih metode ambil: *Dine In*, *Take Away*, atau *Delivery*.\n8. Masukkan alamat (jika Delivery) atau nomor meja (jika Dine In).\n9. Pilih pembayaran: *Cash* atau *QRIS*.\n10. Selesai! 🎉\n\nJika masih bingung, ketik *HELP* ya kak 😊`); //
       return; //
     }
+    const modelZonaDelivery = [
+      "zona delivery", "zona pengiriman", "layanan delivery", "daerah delivery", "wilayah pengiriman",
+      "kirim ke mana", "area delivery", "pengiriman ke mana", "zona antar", "layanan antar", "pengantaran kemana"
+    ];
+
+    if (modelZonaDelivery.includes(isi.toLowerCase())) {
+      const [zonaKelurahanRows] = await connection.execute(`
+        SELECT zp.nama_zona, zk.nama_kelurahan
+        FROM zona_kelurahan zk
+        JOIN zona_pengiriman zp ON zk.zona_id = zp.id
+        ORDER BY zp.nama_zona, zk.nama_kelurahan
+      `);
+
+      if (zonaKelurahanRows.length === 0) {
+        client.sendMessage(nomor, "⚠️ Saat ini belum ada wilayah pengantaran yang terdaftar.");
+        return;
+      }
+
+      // Kelompokkan berdasarkan zona
+      const zonaMap = {};
+      for (const row of zonaKelurahanRows) {
+        if (!zonaMap[row.nama_zona]) zonaMap[row.nama_zona] = [];
+        zonaMap[row.nama_zona].push(row.nama_kelurahan);
+      }
+
+      let pesan = "Kami melayani delivery di:\n";
+      for (const [zona, kelurahans] of Object.entries(zonaMap)) {
+        pesan += `\n📍 Zona ${zona}:\n- ${kelurahans.join('\n- ')}`;
+      }
+
+      await client.sendMessage(nomor, pesan);
+      return;
+    }
 
     // Menu
     const modelMenu = ["menu", "meu", "men", "menuw", "menui", "meniu", "meni"]; //
@@ -123,6 +156,7 @@ module.exports = async function(client, message) { // Pastikan fungsi ini async
       const modelBatal = ["batal", "gak jadi", "rak sido", "btl", "btal", "batal pesan", "batal pesanan"]; //
       if (modelBatal.includes(isi.toLowerCase())) { //
         clearSession(nomor); //
+        return client.sendMessage(nomor, "❌ Pesanan anda dibatalkan. Ketik *Pesan* untuk memesan lagi."); //
       }
       const modelList = ["list", "lihat", "cek pesanan", "total", "totalnya", "lihat pesanan"]; //
       if (modelList.includes(isi.toLowerCase())) { //
@@ -239,16 +273,35 @@ module.exports = async function(client, message) { // Pastikan fungsi ini async
     }
 
     // Pilih metode pengambilan
-    if (session?.step === "pilih_pengambilan") { //
-      const pilihan = isi.toLowerCase(); //
-      if (["delivery", "dine in", "take away"].includes(pilihan)) { //
-        setSession(nomor, { metode: pilihan }); //
+    if (session?.step === "pilih_pengambilan") { 
+      const pilihan = isi.toLowerCase(); 
+      if (["delivery", "dine in", "take away"].includes(pilihan)) {
+        setSession(nomor, { metode: pilihan });
 
-        if (pilihan === "delivery") { //
-          setSession(nomor, { step: "alamat" }); //
-          client.sendMessage(nomor, "Silakan masukkan alamat Anda."); //
-        } else if (pilihan === "dine in") { //
-          setSession(nomor, { step: "meja" }); //
+        if (pilihan === "delivery") { 
+          const [statusDeliveryRows] = await connection.execute(
+            `SELECT delivery_active FROM opsi_pengiriman WHERE id = 1 LIMIT 1`
+          );
+
+          const deliveryAktif = statusDeliveryRows.length > 0 ? statusDeliveryRows[0].delivery_active : false;
+
+          if (!deliveryAktif) {
+            session.step = "pilih_pengambilan"; // tetap di langkah ini
+            setSession(nomor, session);
+
+            await client.sendMessage(nomor, 
+              "⚠️ Maaf, saat ini kami *tidak melayani delivery* karena lonjakan pesanan 🚫\n\n" +
+              "Anda tetap bisa memilih metode lain:\n*Dine In* / *Take Away*");
+
+            return;
+          }
+
+          // delivery aktif, lanjut ke alamat
+          session.step = "alamat_delivery";
+          setSession(nomor, session);
+          client.sendMessage(nomor, "Pesanan akan dikirim ke alamat mana kakak? 😊\nSilakan tulis nama jalan, gang dan nomor rumah.");
+        } else if (pilihan === "dine in") { 
+          setSession(nomor, { step: "meja" }); 
           client.sendMessage(nomor, "Silakan masukan nomor meja."); //
         } else {
           setSession(nomor, { step: "pembayaran" }); //
@@ -265,11 +318,68 @@ module.exports = async function(client, message) { // Pastikan fungsi ini async
       return; //
     }
 
-    if (session?.step === "alamat") { //
-      setSession(nomor, { alamat: isi, step: "pembayaran" }); //
-      client.sendMessage(nomor, "Silakan pilih metode pembayaran: *Cash* / *QRIS*"); //
-      return; //
+    if (session?.step === "alamat_delivery") {
+      session.alamat = isi; // simpan alamat
+      session.step = "kelurahan_delivery";
+      setSession(nomor, session);
+      client.sendMessage(nomor, "Masukkan nama kelurahan (tanpa kata 'kelurahan', 'kel.', atau 'desa').");
+      return;
     }
+
+    if (session?.step === "kelurahan_delivery") {
+      // Normalisasi nama kelurahan
+      let namaKelurahan = isi.toLowerCase()
+        .replace(/^(kel\.|kelurahan|desa)\s*/i, '')
+        .trim();
+
+      const [kelurahanRows] = await connection.execute(
+        `SELECT zona_id FROM zona_kelurahan WHERE LOWER(nama_kelurahan) = ?`,
+        [namaKelurahan]
+      );
+
+      if (kelurahanRows.length === 0) {
+          const [daftarKelurahan] = await connection.execute(
+            `SELECT nama_kelurahan FROM zona_kelurahan ORDER BY nama_kelurahan ASC`
+          );
+
+          const kelurahanList = daftarKelurahan.map(row => `- ${row.nama_kelurahan}`).join('\n');
+
+          await client.sendMessage(nomor,
+            `Maaf, anda berada di luar jangkauan pengiriman kami 😞\n\n` +
+            `Kami melayani delivery di wilayah berikut:\n${kelurahanList}`
+          );
+
+          clearSession(nomor);
+          return;
+      }
+
+
+      const zonaId = kelurahanRows[0].zona_id;
+
+      const [zonaRows] = await connection.execute(
+        `SELECT nama_zona, biaya_ongkir FROM zona_pengiriman WHERE id = ?`,
+        [zonaId]
+      );
+
+      if (zonaRows.length === 0) {
+        client.sendMessage(nomor, "Maaf, terjadi kesalahan dalam sistem zona. Silakan hubungi admin.");
+        clearSession(nomor);
+        return;
+      }
+
+      const { nama_zona, biaya_ongkir } = zonaRows[0];
+
+      session.kelurahan = namaKelurahan;
+      session.zona_id = zonaId;
+      session.biaya_delivery = parseFloat(biaya_ongkir);
+      session.step = "pembayaran";
+
+      setSession(nomor, session);
+
+      client.sendMessage(nomor, `✅ Wilayah *${namaKelurahan}* termasuk zona *${nama_zona}* dengan biaya ongkir Rp ${biaya_ongkir.toLocaleString('id-ID')}.\n\nSilakan pilih metode pembayaran: *Cash* / *QRIS*`);
+      return;
+    }
+
 
     if (session?.step === "meja") { //
       setSession(nomor, { no_meja: isi, step: "pembayaran" }); //
@@ -314,10 +424,18 @@ module.exports = async function(client, message) { // Pastikan fungsi ini async
       }
 
       // Simpan ke DB
+      // await connection.execute(`INSERT INTO pesanan
+      //       (kode_pesanan, nomor_wa, daftar_kode_menu, total_harga, metode_pengambilan, alamat, no_meja, metode_pembayaran, status)
+      //       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu Pembayaran')`, [ //
+      //   kodePesanan, nomor, daftarMenuQty.join(','), totalHarga, session.metode, session.alamat || null, session.no_meja || null, metode //
+      // ]);
       await connection.execute(`INSERT INTO pesanan
-            (kode_pesanan, nomor_wa, daftar_kode_menu, total_harga, metode_pengambilan, alamat, no_meja, metode_pembayaran, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu Pembayaran')`, [ //
-        kodePesanan, nomor, daftarMenuQty.join(','), totalHarga, session.metode, session.alamat || null, session.no_meja || null, metode //
+        (kode_pesanan, nomor_wa, daftar_kode_menu, total_harga, metode_pengambilan, alamat, no_meja, metode_pembayaran, status, biaya_delivery)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu Pembayaran', ?)`,
+      [
+        kodePesanan, nomor, daftarMenuQty.join(','), totalHarga,
+        session.metode, session.alamat || null, session.no_meja || null, metode,
+        session.biaya_delivery || 0
       ]);
 
       if (metode === "qris") { //
@@ -405,9 +523,14 @@ module.exports = async function(client, message) { // Pastikan fungsi ini async
       if (pesananTerakhir.status === "Menunggu Pembayaran") { //
         setSession(nomor, { step: "konfirmasi_batal", orderId: pesananTerakhir.id }); //
         return client.sendMessage(nomor, "❓ Apakah Anda yakin akan membatalkan pesanan Anda?"); //
+      } else if (pesananTerakhir.status === "Dibayar"){
+          return client.sendMessage(nomor, "❌ Pesanan anda sudah dibayar, tidak bisa dibatalkan.");
+      } else if (pesananTerakhir.status === "Sedang dibuat"){
+          return client.sendMessage(nomor, "❌ Pesanan anda sedang dibuat, tidak bisa dibatalkan.");
       } else {
-        return client.sendMessage(nomor, "❌ Pesanan Anda sudah diterima. Tidak bisa dibatalkan."); //
+          return client.sendMessage(nomor, "❌ Anda tidak memiliki pesanan aktif.");
       }
+      
       return; //
     }
     if (session?.step === "konfirmasi_batal") { //

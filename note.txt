@@ -144,3 +144,43 @@ ALTER TABLE `pembayaran_kodeunik` ADD `tanggal_code` DATE NOT NULL DEFAULT CURRE
 
 sudo timedatectl set-timezone Asia/Jakarta
 //selaraskan zona waktu vps
+
+
+
+//tambahkan zona pengiriman fee
+
+CREATE TABLE zona_pengiriman (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama_zona VARCHAR(50) NOT NULL,
+    biaya_ongkir DECIMAL(10, 2) NOT NULL
+);
+
+INSERT INTO zona_pengiriman (nama_zona, biaya_ongkir) VALUES
+('Pusat Kota', 5000.00),
+('Pinggiran Timur', 10000.00),
+('Pinggiran Barat', 12000.00);
+
+CREATE TABLE zona_kelurahan (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama_kelurahan VARCHAR(100) NOT NULL,
+    zona_id INT NOT NULL,
+    FOREIGN KEY (zona_id) REFERENCES zona_pengiriman(id)
+);
+
+INSERT INTO zona_kelurahan (nama_kelurahan, zona_id) VALUES
+('Kauman', 1), ('Kergon', 1),
+('Degayu', 2), ('Kramat', 2),
+('Kuripan', 3), ('Sampangan', 3);
+
+
+ALTER TABLE pesanan
+ADD COLUMN biaya_delivery DECIMAL(10, 2) DEFAULT 0.00;
+
+
+CREATE TABLE opsi_pengiriman (
+    id INT PRIMARY KEY,
+    delivery_active BOOLEAN DEFAULT TRUE
+);
+
+-- Inisialisasi data (id = 1 selalu dipakai)
+INSERT INTO opsi_pengiriman (id, delivery_active) VALUES (1, TRUE);
