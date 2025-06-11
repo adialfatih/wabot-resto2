@@ -7,7 +7,7 @@ async function cariMenuDenganNamaBebas(teksUser) {
     connection = await pool.getConnection(); // Dapatkan koneksi dari pool
 
     // Mengganti db.query dengan connection.execute dan menggunakan async/await
-    const [rows] = await connection.execute(`SELECT kode_menu, nama_menu, alias, harga FROM table_menu`);
+    const [rows] = await connection.execute(`SELECT kode_menu, nama_menu, alias, harga, tersedia FROM table_menu`);
 
     const fuse = new Fuse(rows, {
       keys: ['nama_menu', 'alias'],
@@ -28,6 +28,7 @@ async function cariMenuDenganNamaBebas(teksUser) {
           kode_menu: cocok[0].item.kode_menu,
           nama_menu: cocok[0].item.nama_menu,
           harga: cocok[0].item.harga,
+          tersedia: cocok[0].item.tersedia,
           input: item,
         });
       }

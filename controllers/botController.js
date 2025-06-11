@@ -212,50 +212,57 @@ module.exports = async function(client, message) { // Pastikan fungsi ini async
         }
       }
       // Deteksi input: #kode x qty atau nama x qty
-      let matchKode = isi.match(/^#(\d+)(?:\s*x\s*(\d+))?$/i); //
-      if (matchKode) { //
-        const kode = matchKode[1]; //
-        const qty = parseInt(matchKode[2]) || 1; // default qty = 1 jika tidak ditulis
+      let matchKode = isi.match(/^#(\d+)(?:\s*x\s*(\d+))?$/i); 
+      if (matchKode) {
+        const kode = matchKode[1];
+        const qty = parseInt(matchKode[2]) || 1;
 
-        const [menuRows] = await connection.execute(`SELECT * FROM table_menu WHERE kode_menu = ?`, [kode]); //
-        if (menuRows.length === 0) { //
-          return client.sendMessage(nomor, `❌ Menu dengan kode #${kode} tidak ditemukan.`); //
+        const [menuRows] = await connection.execute(`SELECT * FROM table_menu WHERE kode_menu = ?`, [kode]);
+        if (menuRows.length === 0) {
+          return client.sendMessage(nomor, `❌ Menu dengan kode #${kode} tidak ditemukan.`);
         }
 
-        const item = menuRows[0]; //
-        session.pesanan.push({ //
-          kode_menu: item.kode_menu, //
-          nama_menu: item.nama_menu, //
-          harga: item.harga, //
-          qty //
+        const item = menuRows[0];
+        if (!item.tersedia) {
+          return client.sendMessage(nomor, `❌ Maaf, menu *${item.nama_menu}* telah habis.`);
+        }
+
+        session.pesanan.push({
+          kode_menu: item.kode_menu,
+          nama_menu: item.nama_menu,
+          harga: item.harga,
+          qty
         });
-        setSession(nomor, session); //
-        await client.sendMessage(nomor, `✅ *${item.nama_menu} x${qty}* telah ditambahkan.`); //
-        return; //
+        setSession(nomor, session);
+        await client.sendMessage(nomor, `✅ *${item.nama_menu} x${qty}* telah ditambahkan.`);
+        return;
       }
 
       // Deteksi nama menu + qty (fuzzy)
-      const matchNamaQty = isi.match(/^(.+?)\s*x\s*(\d+)$/i); //
-      const nama = matchNamaQty ? matchNamaQty[1].trim() : isi.trim(); //
-      const qty = matchNamaQty ? parseInt(matchNamaQty[2]) : 1; //
+      const matchNamaQty = isi.match(/^(.+?)\s*x\s*(\d+)$/i);
+      const nama = matchNamaQty ? matchNamaQty[1].trim() : isi.trim();
+      const qty = matchNamaQty ? parseInt(matchNamaQty[2]) : 1;
 
-      // Ini adalah baris yang berubah, memanggil cariMenuDenganNamaBebas yang sudah async
-      const hasil = await cariMenuDenganNamaBebas(nama); //
+      const hasil = await cariMenuDenganNamaBebas(nama);
 
-      if (hasil.length === 0) { //
-        return client.sendMessage(nomor, `❌ Menu *${nama}* tidak ditemukan.`); //
+      if (hasil.length === 0) {
+        return client.sendMessage(nomor, `❌ Menu *${nama}* tidak ditemukan.`);
       }
 
-      const item = hasil[0]; //
-      session.pesanan.push({ //
-        kode_menu: item.kode_menu, //
-        nama_menu: item.nama_menu, //
-        harga: item.harga, //
-        qty //
+      const item = hasil[0];
+      if (!item.tersedia) {
+        return client.sendMessage(nomor, `❌ Maaf, menu *${item.nama_menu}* telah habis.`);
+      }
+
+      session.pesanan.push({
+        kode_menu: item.kode_menu,
+        nama_menu: item.nama_menu,
+        harga: item.harga,
+        qty
       });
-      setSession(nomor, session); //
-      await client.sendMessage(nomor, `✅ *${item.nama_menu} x${qty}* telah ditambahkan.`); //
-      return; //
+      setSession(nomor, session);
+      await client.sendMessage(nomor, `✅ *${item.nama_menu} x${qty}* telah ditambahkan.`);
+      return;
     }
     //block kode menangani pesanan
 
