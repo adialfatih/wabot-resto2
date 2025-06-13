@@ -22,7 +22,13 @@ module.exports = async function(client, message) { // Pastikan fungsi ini async
     const userTerdaftar = userRows.length > 0; 
     const namaUser = userTerdaftar ? userRows[0].nama : null; 
     const session = getSession(nomor); 
-
+    //info jam buka
+    const modelInfoJamBuka = ["info jam buka", "jam buka", "jam operasional", "buka jam berapa"];
+    if (modelInfoJamBuka.includes(isi)) {
+        await client.sendMessage(nomor, `Saat ini kita masih buka kak 😊`);
+        return; 
+    }
+    //
     const sapaan = ["hi", "hai", "halo", "hello", "hallo"]; 
     if (sapaan.includes(isi.toLowerCase())) { 
       const teksBalik = isi.charAt(0).toUpperCase() + isi.slice(1).toLowerCase(); 
@@ -65,20 +71,19 @@ module.exports = async function(client, message) { // Pastikan fungsi ini async
 
     // Help
     if (isi.toLowerCase() === "help" || isi.toLowerCase() === "bantuan" || isi.toLowerCase() === "bantu" || isi.toLowerCase() === "?") { //
-      await client.sendMessage(nomor, `📖 *Panduan:*\n- *DAFTAR* untuk mendaftar\n- *MENU* untuk melihat menu\n- *PESAN* untuk memesan\n- *STATUS* untuk melihat status pesanan`); //
+      await client.sendMessage(nomor, `📖 *Panduan:*\n- *DAFTAR* untuk mendaftar\n- *MENU* untuk melihat menu\n- *PESAN* untuk memesan\n- *CARA PESAN* untuk panduan\n- *STATUS* untuk melihat status pesanan\n- *ZONA DELIVERY* untuk area delivery`); //
       return; //
     }
     const modelPanduanPesan = [ //
-      "cara pesan", "bagaimana cara memesan", "gimana cara pesan", //
-      "mau pesan gimana", "pesan gimana", "pesan bagaimana" //
+      "cara pesan", "bagaimana cara memesan", "gimana cara pesan", "mau pesan gimana", "pesan gimana", "pesan bagaimana", "cara mesan"
     ];
     if (modelPanduanPesan.includes(isi.toLowerCase())) { //
-      await client.sendMessage(nomor, `📖 *Cara Memesan di Wabot-Resto:*\n\n1. Ketik *MENU* untuk melihat daftar makanan.\n2. Ketik *PESAN* untuk mulai memesan.\n3. Masukkan pesanan satu per satu, contoh:\n  - *#1 x 2* (Kode menu #1 sebanyak 2 porsi)\n  - *nasgor babat x 1* (Nama menu + jumlah)\n4. Ketik *List* untuk melihat daftar pesanan.\n5. Ketik *SELESAI* jika sudah selesai memilih menu.\n6. Konfirmasi pesanan.\n7. Pilih metode ambil: *Dine In*, *Take Away*, atau *Delivery*.\n8. Masukkan alamat (jika Delivery) atau nomor meja (jika Dine In).\n9. Pilih pembayaran: *Cash* atau *QRIS*.\n10. Selesai! 🎉\n\nJika masih bingung, ketik *HELP* ya kak 😊`); //
+      await client.sendMessage(nomor, `📖 *Cara Memesan di Wabot-Resto:*\n\n1. Ketik *PESAN* untuk mulai memesan.\n2. Tunggu sampai bot balas, kemudian\n3. Masukkan pesanan satu per satu, contoh:\n  - *#1 x 2* (Kode menu #1 sebanyak 2 porsi)\n  - *nasgor babat x 1* (Nama menu + jumlah)\n4. Ketik *List* untuk melihat daftar pesanan.\n5. Ketik *SELESAI* jika sudah selesai memilih menu.\n6. Konfirmasi pesanan.\n7. Pilih metode ambil: *Dine In*, *Take Away*, atau *Delivery*.\n8. Masukkan alamat (jika Delivery) atau nomor meja (jika Dine In).\n9. Pilih pembayaran: *Cash* atau *QRIS*.\n10. Selesai! 🎉\n\nJika masih bingung, ketik *HELP* ya kak 😊`); //
       return; //
     }
     const modelZonaDelivery = [
       "zona delivery", "zona pengiriman", "layanan delivery", "daerah delivery", "wilayah pengiriman",
-      "kirim ke mana", "area delivery", "pengiriman ke mana", "zona antar", "layanan antar", "pengantaran kemana"
+      "kirim ke mana", "area delivery", "pengiriman ke mana", "zona antar", "layanan antar", "pengantaran kemana", "info delivery"
     ];
 
     if (modelZonaDelivery.includes(isi.toLowerCase())) {
