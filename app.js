@@ -100,9 +100,12 @@ client.on('message', async msg => {
 
     // 1. Cek jam buka resto
     const now = new Date();
+    const wibTime = now.toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
     const hariSekarang = now.toLocaleDateString('id-ID', { weekday: 'long' }); // Contoh: "Senin"
     const jamSekarang = now.toTimeString().slice(0, 5); // Format HH:MM
-
+    console.log('Hari Sekarang:', hariSekarang);
+    console.log('Jam Sekarang:', jamSekarang);
+    console.log('wib Sekarang:', wibTime);
     // Ubah nama hari ke format yang sesuai dengan tabel Anda (contoh: "Senin" menjadi "Senin")
     // Pastikan konsisten antara database dan format toLocaleDateString
     const hariUntukQuery = hariSekarang.charAt(0).toUpperCase() + hariSekarang.slice(1);
@@ -292,7 +295,8 @@ app.post('/api/kirim-notifikasi', async (req, res) => {
 
 app.post('/api/kirim-pesan', async (req, res) => {
   const { nomor_wa, isi_pesanan, urlmedia } = req.body;
-
+  console.log('nomor_wa:', nomor_wa);
+  console.log('isi_pesanan:', isi_pesanan);
   if (!nomor_wa || !isi_pesanan) {
     return res.status(400).json({ error: "Harus ada nomor_wa dan isi_pesanan" });
   }
@@ -321,6 +325,7 @@ app.post('/api/kirim-pesan', async (req, res) => {
     }
 
     return res.json({ success: true, message: 'Pesan dikirim ke WhatsApp user.' });
+    console.log('Pesan dikirim ke WhatsApp user.');
   } catch (err) {
     console.error('❌ Gagal kirim:', err);
     return res.status(500).json({ error: "Gagal kirim ke WhatsApp." });
@@ -328,12 +333,6 @@ app.post('/api/kirim-pesan', async (req, res) => {
 });
 
 
-// app.get('/users', (req, res) => {
-//   db.query('SELECT * FROM users', (err, results) => {
-//     if (err) return res.send('Error');
-//     res.json(results);
-//   });
-// });
 app.get('/users', async (req, res) => {
   let connection;
   try {

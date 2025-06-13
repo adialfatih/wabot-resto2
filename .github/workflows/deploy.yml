@@ -1,0 +1,29 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main  # ganti jika kamu pakai branch lain
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        script: |
+          if [ ! -d "/home/ftpadish/wabot-resto2" ]; then 
+          cd /home/ftpadish
+          git clone https://github.com/adialfatih/wabot-resto2.git
+          else 
+          cd /home/ftpadish/wabot-resto2
+          git pull origin main
+          fi
+          cd /home/ftpadish/wabot-resto2
+          npm install
+          pm2 start app.js --name restobotnew || pm2 restart restobotnew
