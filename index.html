@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HavaBot - Smart WhatsApp Assistant for Cafes & Restaurants. Handle dine-in, takeaway, and delivery orders seamlessly through WhatsApp chat.">
+    <meta name="keywords" content="HavaBot, restaurant chatbot, cafe ordering system, WhatsApp ordering, food delivery system, restaurant technology">
+    <meta name="author" content="HavaBot Team">
+    <meta property="og:title" content="HavaBot - Smart WhatsApp Ordering System">
+    <meta property="og:description" content="Revolutionize your restaurant's ordering process with WhatsApp integration.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.HavaBot.app">
+    <meta property="og:image" content="https://www.HavaBot.app/images/HavaBot-social.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="icon" href="public/img/logo4.png" sizes="any">
+    <link rel="icon" href="public/img/Havabot.svg" type="image/svg+xml">
+
+    <link rel="apple-touch-icon" href="public/img/logo4.png">
+
+    <link rel="icon" href="public/img/logo4.png" sizes="192x192" type="image/png">
+    <link rel="icon" href="public/img/logo4.png" sizes="512x512" type="image/png">
+
+    <link rel="mask-icon" href="public/img/Havabot.svg" color="#5bbad5"> <meta name="msapplication-TileColor" content="#da532c"> <meta name="msapplication-TileImage" content="public/img/logo4.png">
+
+    <meta name="theme-color" content="#ffffff"> <link rel="icon" type="image/png" sizes="32x32" href="public/img/logo4.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="public/img/logo4.png">
+    <title>HavaBot - High Automation Virtual Asistant for Restaurants</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6C4AB6;
+            --secondary: #8D72E1;
+            --accent: #B9E0FF;
+            --light: #F8F6F4;
+            --dark: #2D2727;
+            --success: #4BB543;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--dark);
+            background-color: var(--light);
+            overflow-x: hidden;
+        }
+        
+        h1, h2, h3, h4 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header Styles */
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        header.scrolled {
+            padding: 10px 0;
+            background-color: rgba(255,255,255,0.95);
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo img {
+            height: 40px;
+        }
+        
+        .logo h1 {
+            font-size: 24px;
+            color: var(--primary);
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+        
+        nav a:hover {
+            color: var(--primary);
+        }
+        
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            bottom: -5px;
+            left: 0;
+            transition: width 0.3s;
+        }
+        
+        nav a:hover::after {
+            width: 100%;
+        }
+        
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--primary);
+        }
+        
+        .cta-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .cta-button:hover {
+            background-color: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 74, 182, 0.3);
+        }
+        
+        .cta-button.secondary {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .cta-button.secondary:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 180px 0 100px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(108, 74, 182, 0.1) 0%, rgba(108, 74, 182, 0) 70%);
+            z-index: 0;
+        }
+        
+        .hero-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-text {
+            flex: 1;
+            max-width: 600px;
+        }
+        
+        .hero-text h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+        
+        .hero-text p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .hero-image {
+            flex: 1;
+            position: relative;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .hero-image img {
+            width: 100%;
+            max-width: 300px;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 100px 0;
+            background-color: white;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .section-title h2 {
+            font-size: 36px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .section-title p {
+            max-width: 700px;
+            margin: 0 auto;
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background-color: var(--light);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        
+        .feature-card.animated {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            font-size: 50px;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        /* How It Works Section */
+        .how-it-works {
+            padding: 100px 0;
+            background-color: var(--light);
+        }
+        
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .steps::before {
+            content: '';
+            position: absolute;
+            left: 30px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+        
+        .step {
+            display: flex;
+            gap: 30px;
+            position: relative;
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 0.5s ease;
+        }
+        
+        .step.animated {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            flex-shrink: 0;
+            z-index: 1;
+        }
+        
+        .step-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            flex: 1;
+        }
+        
+        .step-content h3 {
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        /* Merchants Section */
+        .merchants {
+            padding: 100px 0;
+            background-color: white;
+        }
+        
+        .merchants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .merchant-card {
+            background-color: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        
+        .merchant-card.animated {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .merchant-card:hover {
+            transform: scale(1.03);
+        }
+        
+        .merchant-image {
+            height: 200px;
+            overflow: hidden;
+        }
+        
+        .merchant-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .merchant-card:hover .merchant-image img {
+            transform: scale(1.1);
+        }
+        
+        .merchant-info {
+            padding: 20px;
+        }
+        
+        .merchant-info h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .merchant-info p {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .merchant-cta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .whatsapp-button {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .whatsapp-button:hover {
+            background-color: #128C7E;
+            transform: translateY(-2px);
+        }
+        
+        /* Testimonials */
+        .testimonials {
+            padding: 100px 0;
+            background-color: var(--light);
+        }
+        
+        .testimonial-slider {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .testimonial {
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 0.5s ease;
+            position: absolute;
+            width: 100%;
+            top: 0;
+            left: 0;
+        }
+        
+        .testimonial.active {
+            opacity: 1;
+            transform: scale(1);
+            position: relative;
+        }
+        
+        .testimonial-text {
+            font-size: 18px;
+            font-style: italic;
+            color: #555;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .author-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .author-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .author-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .author-role {
+            color: var(--secondary);
+            font-size: 14px;
+        }
+        
+        .testimonial-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .testimonial-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #ddd;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .testimonial-dot.active {
+            background-color: var(--primary);
+            transform: scale(1.2);
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 100px 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            text-align: center;
+        }
+        
+        .cta-section h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        .cta-section p {
+            max-width: 700px;
+            margin: 0 auto 30px;
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .cta-section .cta-button {
+            background-color: white;
+            color: var(--primary);
+        }
+        
+        .cta-section .cta-button.secondary {
+            background-color: transparent;
+            color: white;
+            border-color: white;
+        }
+        
+        .cta-section .cta-button.secondary:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 60px 0 20px;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .footer-logo img {
+            height: 30px;
+        }
+        
+        .footer-logo h3 {
+            font-size: 20px;
+            color: white;
+        }
+        
+        .footer-about p {
+            color: #aaa;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .social-link:hover {
+            background-color: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .footer-links h4 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .footer-links ul {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-links a {
+            color: #aaa;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .footer-newsletter p {
+            color: #aaa;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .newsletter-form {
+            display: flex;
+        }
+        
+        .newsletter-form input {
+            flex: 1;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 30px 0 0 30px;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .newsletter-form button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 0 30px 30px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .newsletter-form button:hover {
+            background-color: var(--secondary);
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #aaa;
+            font-size: 14px;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .hero-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .hero-text {
+                max-width: 100%;
+                margin-bottom: 50px;
+            }
+            
+            .hero-buttons {
+                justify-content: center;
+            }
+            
+            .hero-image {
+                max-width: 80%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            /* nav {
+                display: flex;
+            } */
+            
+            nav ul li {
+                margin: 20px 0;
+            }
+            
+            nav ul {
+                background: #ccc;
+                width: 300px;
+                height: 100vh;
+                position: absolute;
+                right: 0;
+                top: 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                transform: translateX(100%);
+                transition: transform 0.3s ease-in-out;
+            }
+            nav ul.open {
+                transform: translateX(0);
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .hero-text h1 {
+                font-size: 36px;
+            }
+            
+            .hero-text p {
+                font-size: 16px;
+            }
+            
+            .section-title h2 {
+                font-size: 30px;
+            }
+            
+            .steps::before {
+                left: 25px;
+            }
+            
+            .step-number {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .hero {
+                padding: 150px 0 80px;
+            }
+            
+            .hero-text h1 {
+                font-size: 30px;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .feature-card {
+                padding: 20px;
+            }
+            
+            .steps::before {
+                left: 20px;
+            }
+            
+            .step {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .step-number {
+                margin-left: 5px;
+            }
+            
+            .testimonial {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header id="header">
+        <div class="container">
+            <div class="header-container">
+                <div class="logo">
+                    <img src="public/img/logo4.png" alt="HavaBot Logo">
+                    <h1>HavaBot</h1>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#features">Fitur</a></li>
+                        <li><a href="#how-it-works">Cara Kerja</a></li>
+                        <li><a href="#merchants">Mitra Kami</a></li>
+                        <li><a href="#testimonials">Testimoni</a></li>
+                    </ul>
+                </nav>
+                <button class="cta-button">Hubungi Kami</button>
+                <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Transformasi Sistem Pemesanan Restoran Anda!</h1>
+                    <p>HavaBot - Asisten Cerdas WhatsApp untuk Semua Jenis Pesanan Kelola pemesanan dine-in, takeaway, dan delivery dengan mudah lewat chat. Praktis tanpa perlu instal aplikasi, tanpa proses ribet - cukup kirim pesan, pesanan langsung diproses!</p>
+                    <div class="hero-buttons">
+                        <a href="#merchants" class="cta-button">Pesan Sekarang</a>
+                        <a href="#how-it-works" class="cta-button secondary">Demo</a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <img src="public/img/logo5.png" alt="HavaBot in action on mobile devices">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>Fitur Canggih Lebih Efisien</h2>
+                <p>Semua kebutuhan Anda dalam satu solusi - mempermudah proses pemesanan sekaligus memberikan pengalaman terbaik bagi pelanggan.</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3>Integrasi WhatsApp</h3>
+                    <p>Pelanggan dapat memesan langsung melalui WhatsApp, platform pesan yang sudah mereka kenal dan sukai.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-list-check"></i>
+                    </div>
+                    <h3>Manajemen Pesanan Otomatis</h3>
+                    <p>Pesanan secara otomatis dikategorikan sebagai dine-in, takeaway, atau delivery dengan semua detail yang diperlukan.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>Aktif 24 Jam</h3>
+                    <p>Restoran Anda dapat menerima pesanan bahkan ketika Anda tidak bisa menjawab telepon secara fisik.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Analisis Penjualan</h3>
+                    <p>Dapatkan laporan detail tentang item paling populer, jam sibuk pemesanan, dan preferensi pelanggan.</p>  
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3>Notifikasi Instan</h3>
+                    <p>Terima pemberitahuan real-time untuk pesanan baru dengan semua detail yang Anda butuhkan untuk mempersiapkannya.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h3>Dukungan Multibahasa</h3>
+                    <p>Layani pelanggan dalam bahasa pilihan mereka dengan fitur terjemahan bawaan kami.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-title">
+                <h2>Cara Kerja HavaBot</h2>
+                <p>Setup sederhana, hasil yang powerful. Mulai gunakan HavaBot hanya dalam beberapa langkah mudah.</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Daftar untuk HavaBot</h3>
+                        <p>Daftarkan restoran Anda dan hubungkan akun WhatsApp Bisnis Anda. Tim kami akan memandu Anda melalui proses setup yang sederhana.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Unggah Menu Anda</h3>
+                        <p>Kirimkan menu Anda atau biarkan kami membantu membuat versi digital yang bekerja sempurna dengan sistem kami.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Bagikan Tautan HavaBot Anda</h3>
+                        <p>Kami akan memberikan Anda tautan WhatsApp unik untuk dibagikan ke pelanggan melalui website, media sosial, atau di tempat.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Mulai Menerima Pesanan</h3>
+                        <p>Pelanggan sekarang bisa mengirim pesan ke restoran Anda melalui WhatsApp untuk memesan, bertanya, atau membuat reservasi.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Merchants Section -->
+    <section class="merchants" id="merchants">
+        <div class="container">
+            <div class="section-title">
+                <h2>Pesan dari Partner Kuliner Kami</h2>
+                <p>Jelajahi berbagai restoran & kafe terdekat yang sudah menggunakan HavaBot untuk pengalaman pesan-makan lebih praktis!</p>
+            </div>
+            <div class="merchants-grid">
+                <div class="merchant-card">
+                    <div class="merchant-image">
+                        <img src="images/merchant1.jpg" alt="The Coffee Corner">
+                    </div>
+                    <div class="merchant-info">
+                        <h3>The Coffee Corner</h3>
+                        <p>Artisanal coffee & breakfast • 1.2km away</p>
+                        <div class="merchant-cta">
+                            <span class="rating">⭐ 4.8 (124)</span>
+                            <button class="whatsapp-button">
+                                <i class="fab fa-whatsapp"></i> Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="merchant-card">
+                    <div class="merchant-image">
+                        <img src="images/merchant2.jpg" alt="Pizza Napoli">
+                    </div>
+                    <div class="merchant-info">
+                        <h3>Pizza Napoli</h3>
+                        <p>Authentic Italian pizza • 2.5km away</p>
+                        <div class="merchant-cta">
+                            <span class="rating">⭐ 4.6 (89)</span>
+                            <button class="whatsapp-button">
+                                <i class="fab fa-whatsapp"></i> Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="merchant-card">
+                    <div class="merchant-image">
+                        <img src="images/merchant3.jpg" alt="Burgers & More">
+                    </div>
+                    <div class="merchant-info">
+                        <h3>Burgers & More</h3>
+                        <p>Gourmet burgers & shakes • 3.1km away</p>
+                        <div class="merchant-cta">
+                            <span class="rating">⭐ 4.7 (156)</span>
+                            <button class="whatsapp-button">
+                                <i class="fab fa-whatsapp"></i> Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="merchant-card">
+                    <div class="merchant-image">
+                        <img src="images/merchant4.jpg" alt="Sushi Palace">
+                    </div>
+                    <div class="merchant-info">
+                        <h3>Sushi Palace</h3>
+                        <p>Fresh Japanese cuisine • 1.8km away</p>
+                        <div class="merchant-cta">
+                            <span class="rating">⭐ 4.9 (203)</span>
+                            <button class="whatsapp-button">
+                                <i class="fab fa-whatsapp"></i> Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials" id="testimonials">
+        <div class="container">
+            <div class="section-title">
+                <h2>Apa Kata Mitra Kami</h2>
+                <p>Dengarkan dari pemilik restoran yang telah mengubah bisnis mereka dengan HavaBot.</p>
+            </div>
+            <div class="testimonial-slider">
+                <div class="testimonial active">
+                    <p class="testimonial-text">"Sejak menerapkan HavaBot, volume pesanan kami meningkat hingga 40% dan kami berhasil mengurangi kesalahan pemesanan hingga hampir nol. Bagian terbaiknya? Pelanggan kami menyukai betapa mudahnya memesan melalui WhatsApp."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <img src="images/testimonial1.jpg" alt="Maria Rodriguez">
+                        </div>
+                        <div class="author-name">Maria Rodriguez</div>
+                        <div class="author-role">Owner, The Coffee Corner</div>
+                    </div>
+                </div>
+                <div class="testimonial">
+                    <p class="testimonial-text">"HavaBot telah sepenuhnya menyederhanakan operasi take away dan pengiriman kami. Kini kami dapat menangani dua kali lipat pesanan dengan staf yang sama, dan sistem otomatis ini berarti kami tidak akan pernah melewatkan satu pesanan pun."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <img src="images/testimonial2.jpg" alt="James Chen">
+                        </div>
+                        <div class="author-name">James Chen</div>
+                        <div class="author-role">Manager, Sushi Palace</div>
+                    </div>
+                </div>
+                <div class="testimonial">
+                    <p class="testimonial-text">"Sebagai kafe kecil, kami tidak mampu membeli sistem pemesanan yang mewah. HavaBot memberi kami kemampuan profesional dengan biaya yang jauh lebih murah. Pengaturannya mudah dan pelanggan kami langsung menggunakannya."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <img src="images/testimonial3.jpg" alt="Sarah Johnson">
+                        </div>
+                        <div class="author-name">Sarah Johnson</div>
+                        <div class="author-role">Owner, Morning Bliss Cafe</div>
+                    </div>
+                </div>
+                <div class="testimonial-nav">
+                    <div class="testimonial-dot active"></div>
+                    <div class="testimonial-dot"></div>
+                    <div class="testimonial-dot"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Siap Transformasi Restoran Anda?</h2>
+            <p>Tingkatkan efisiensi bisnis bersama restoran yang sudah merasakan kemudahan HavaBot - layanan pelanggan lebih cepat, operasional lebih ringkas!</p>
+            <div class="cta-buttons">
+                <a href="#" class="cta-button">Start Free Trial</a>
+                <a href="#" class="cta-button secondary">Request Demo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-about">
+                    <div class="footer-logo">
+                        <img src="public/img/Havabot.svg" alt="HavaBot Logo">
+                        <h3>HavaBot</h3>
+                    </div>
+                    <p>The smart WhatsApp assistant for restaurants and cafes. Simplifying ordering for businesses and customers alike.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#merchants">Our Merchants</a></li>
+                        <li><a href="#testimonials">Testimonials</a></li>
+                        <li><a href="#">Pricing</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h4>Newsletter</h4>
+                    <p>Subscribe to our newsletter for the latest updates, tips, and restaurant industry insights.</p>
+                    <form class="newsletter-form">
+                        <input type="email" placeholder="Your email address">
+                        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 HavaBot. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        const nav = document.querySelector('nav ul');
+        
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            nav.classList.toggle('open');
+            console.log('tes oke');
+        });
+        document.addEventListener('click', (e) => {
+            // Jika klik bukan di dalam nav dan bukan di tombol menu
+            if (!nav.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+                nav.classList.toggle('open');
+            }
+        });
+        
+        // Header Scroll Effect
+        const header = document.getElementById('header');
+        
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+        
+        // Testimonial Slider
+        const testimonials = document.querySelectorAll('.testimonial');
+        const dots = document.querySelectorAll('.testimonial-dot');
+        let currentTestimonial = 0;
+        
+        function showTestimonial(index) {
+            testimonials.forEach(testimonial => testimonial.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            testimonials[index].classList.add('active');
+            dots[index].classList.add('active');
+            currentTestimonial = index;
+        }
+        
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                showTestimonial(index);
+            });
+        });
+        
+        // Auto-rotate testimonials
+        setInterval(() => {
+            let nextTestimonial = (currentTestimonial + 1) % testimonials.length;
+            showTestimonial(nextTestimonial);
+        }, 5000);
+        
+        // Scroll Animation
+        const animateOnScroll = () => {
+            const elements = document.querySelectorAll('.feature-card, .step, .merchant-card');
+            
+            elements.forEach(element => {
+                const elementPosition = element.getBoundingClientRect().top;
+                const screenPosition = window.innerHeight / 1.2;
+                
+                if (elementPosition < screenPosition) {
+                    element.classList.add('animated');
+                }
+            });
+        };
+        
+        window.addEventListener('scroll', animateOnScroll);
+        window.addEventListener('load', animateOnScroll);
+        
+        // Smooth Scrolling for Anchor Links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Close mobile menu if open
+                    if (window.innerWidth <= 768) {
+                        nav.style.display = 'none';
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
