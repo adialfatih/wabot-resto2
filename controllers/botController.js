@@ -33,11 +33,11 @@ module.exports = async function(client, message) { // Pastikan fungsi ini async
     if (sapaan.includes(isi.toLowerCase())) { 
       const teksBalik = isi.charAt(0).toUpperCase() + isi.slice(1).toLowerCase(); 
       if (userTerdaftar) { 
-        await client.sendMessage(nomor, `${teksBalik} juga ${namaUser}, 👋 Aku adalah robot pintar dari *Wabot-Resto*, yang akan selalu setia menjadi asisten virtual untuk membantu kakak memesan makanan favorit. Ada yang bisa di bantu?\n\nKetik *MENU* untuk melihat daftar menu, ketik *HELP* untuk bantuan atau ketik *INFO* untuk informasi.`); 
+        await client.sendMessage(nomor, `${teksBalik} juga ${namaUser}, 👋 Aku adalah robot pintar dari *HavaBOT*, yang akan selalu setia menjadi asisten virtual untuk membantu kakak memesan makanan favorit. Ada yang bisa di bantu?\n\nKetik *MENU* untuk melihat daftar menu, ketik *HELP* untuk bantuan atau ketik *INFO* untuk informasi.`); 
         return; 
       }
       if (!userTerdaftar) { 
-        await client.sendMessage(nomor, `${teksBalik} juga!, 👋\n\nSelamat datang di *Wabot-Resto*, aku adalah asisten virtual yang siap membantu kakak pesan makanan favorit 🍜\n\nSebelum mulai, boleh kenalan dulu? 😊 \nSilakan ketik *DAFTAR* untuk mulai mendaftar ya.\nKalau kakak butuh bantuan, ketik saja *HELP*. Aku siap bantu!`); //
+        await client.sendMessage(nomor, `${teksBalik} juga!, 👋\n\nSelamat datang di *HavaBOT*, aku adalah asisten virtual yang siap membantu kakak pesan makanan favorit 🍜\n\nSebelum mulai, boleh kenalan dulu? 😊 \nSilakan ketik *DAFTAR* untuk mulai mendaftar ya.\nKalau kakak butuh bantuan, ketik saja *HELP*. Aku siap bantu!`); //
         return; //
       }
     }
@@ -65,7 +65,7 @@ module.exports = async function(client, message) { // Pastikan fungsi ini async
         return; //
       }
 
-      await client.sendMessage(nomor, "Selamat datang di *Wabot-Resto*, aku adalah asisten virtual yang siap membantu kakak pesan makanan favorit 🍜\n\nSebelum mulai, boleh kenalan dulu? 😊 \nSilakan ketik *DAFTAR* untuk mulai mendaftar ya.\nKalau kakak bantuan, ketik saja *HELP*. Aku siap bantu!"); //
+      await client.sendMessage(nomor, "Selamat datang di *HavaBOT*, aku adalah asisten virtual yang siap membantu kakak pesan makanan favorit 🍜\n\nSebelum mulai, boleh kenalan dulu? 😊 \nSilakan ketik *DAFTAR* untuk mulai mendaftar ya.\nKalau kakak bantuan, ketik saja *HELP*. Aku siap bantu!"); //
       return; //
     }
 
@@ -78,7 +78,7 @@ module.exports = async function(client, message) { // Pastikan fungsi ini async
       "cara pesan", "bagaimana cara memesan", "gimana cara pesan", "mau pesan gimana", "pesan gimana", "pesan bagaimana", "cara mesan"
     ];
     if (modelPanduanPesan.includes(isi.toLowerCase())) { //
-      await client.sendMessage(nomor, `📖 *Cara Memesan di Wabot-Resto:*\n\n1. Ketik *PESAN* untuk mulai memesan.\n2. Tunggu sampai bot balas, kemudian\n3. Masukkan pesanan satu per satu, contoh:\n  - *#1 x 2* (Kode menu #1 sebanyak 2 porsi)\n  - *nasgor babat x 1* (Nama menu + jumlah)\n4. Ketik *List* untuk melihat daftar pesanan.\n5. Ketik *SELESAI* jika sudah selesai memilih menu.\n6. Konfirmasi pesanan.\n7. Pilih metode ambil: *Dine In*, *Take Away*, atau *Delivery*.\n8. Masukkan alamat (jika Delivery) atau nomor meja (jika Dine In).\n9. Pilih pembayaran: *Cash* atau *QRIS*.\n10. Selesai! 🎉\n\nJika masih bingung, ketik *HELP* ya kak 😊`); //
+      await client.sendMessage(nomor, `📖 *Cara Memesan di HavaBOT:*\n\n1. Ketik *PESAN* untuk mulai memesan.\n2. Tunggu sampai bot balas, kemudian\n3. Masukkan pesanan satu per satu, contoh:\n  - *#1 x 2* (Kode menu #1 sebanyak 2 porsi)\n  - *nasgor babat x 1* (Nama menu + jumlah)\n4. Ketik *List* untuk melihat daftar pesanan.\n5. Ketik *SELESAI* jika sudah selesai memilih menu.\n6. Konfirmasi pesanan.\n7. Pilih metode ambil: *Dine In*, *Take Away*, atau *Delivery*.\n8. Masukkan alamat (jika Delivery) atau nomor meja (jika Dine In).\n9. Pilih pembayaran: *Cash* atau *QRIS*.\n10. Selesai! 🎉\n\nJika masih bingung, ketik *HELP* ya kak 😊`); //
       return; //
     }
     const modelZonaDelivery = [
